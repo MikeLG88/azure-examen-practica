@@ -6,12 +6,10 @@
 <title>Simulador Azure PRO</title>
 
 <style>
-*{
-  box-sizing:border-box;
-}
+*{box-sizing:border-box;}
 
 body{
-  font-family: Arial, sans-serif;
+  font-family: Arial;
   background:#0f172a;
   color:#fff;
   display:flex;
@@ -27,45 +25,22 @@ body{
   padding:20px;
   border-radius:12px;
   width:100%;
-  max-width:750px;
-}
-
-h2,h3{
-  margin-top:10px;
+  max-width:900px;
 }
 
 button{
   margin-top:10px;
-  padding:15px;
+  padding:14px;
   border:none;
   border-radius:8px;
   cursor:pointer;
-  font-size:16px;
   width:100%;
 }
 
-.option{
-  display:block;
-  width:100%;
-  margin:5px 0;
-  background:#334155;
-  color:#fff;
-}
-
+.option{background:#334155;color:white;}
 .correct{background:#16a34a!important}
 .wrong{background:#dc2626!important}
 .next{background:#2563eb;color:white}
-
-select,label{
-  margin-top:10px;
-  display:block;
-  width:100%;
-}
-
-select{
-  padding:10px;
-  border-radius:6px;
-}
 
 .progressBar{
   height:10px;
@@ -73,31 +48,28 @@ select{
   border-radius:5px;
   margin-top:10px;
 }
-
 .progress{
   height:10px;
   background:#22c55e;
-  border-radius:5px;
 }
 
-/* 📱 Ajustes móviles */
-@media (max-width:600px){
-  .card{
-    padding:15px;
-  }
+.flex{
+  display:flex;
+  gap:20px;
+  flex-wrap:wrap;
+}
 
-  h2{
-    font-size:20px;
-  }
+.left{flex:2;min-width:300px;}
+.right{
+  flex:1;
+  min-width:250px;
+  background:#0f172a;
+  padding:15px;
+  border-radius:10px;
+}
 
-  h3{
-    font-size:16px;
-  }
-
-  button{
-    font-size:15px;
-    padding:14px;
-  }
+@media(max-width:600px){
+  .flex{flex-direction:column;}
 }
 </style>
 </head>
@@ -105,40 +77,41 @@ select{
 <body>
 
 <div class="card" id="app">
-  <h2>Simulador Azure PRO</h2>
 
-  <label>Modo:</label>
-  <select id="mode">
-    <option value="ALL">Todos</option>
-    <option value="DATOS">Datos</option>
-    <option value="DEV">Programación</option>
-  </select>
+<h2>Simulador Azure PRO</h2>
 
-  <label>Subtema:</label>
-  <select id="subtopic">
-    <option value="ALL">Todos</option>
-    <option value="Relacional">Relacional</option>
-    <option value="NoSQL">NoSQL</option>
-    <option value="Functions">Functions</option>
-    <option value="Seguridad">Seguridad</option>
-  </select>
+<label>Modo:</label>
+<select id="mode">
+  <option value="ALL">Todos</option>
+  <option value="DATOS">Datos</option>
+  <option value="DEV">Programación</option>
+</select>
 
-  <label>Modo de juego:</label>
-  <select id="gameMode">
-    <option value="pro">⏱️ Pro</option>
-    <option value="casual">⌛ Casual</option>
-    <option value="relax">😎 Relax</option>
-  </select>
+<label>Subtema:</label>
+<select id="subtopic">
+  <option value="ALL">Todos</option>
+  <option value="Relacional">Relacional</option>
+  <option value="NoSQL">NoSQL</option>
+  <option value="Functions">Functions</option>
+  <option value="Seguridad">Seguridad</option>
+</select>
 
-  <label>
-    <input type="checkbox" id="failedMode">
-    Solo preguntas falladas
-  </label>
+<label>Modo:</label>
+<select id="gameMode">
+  <option value="pro">⏱️ Pro</option>
+  <option value="casual">⌛ Casual</option>
+  <option value="relax">😎 Relax</option>
+</select>
 
-  <button onclick="startQuiz()">Iniciar</button>
+<label>
+<input type="checkbox" id="failedMode"> Solo falladas
+</label>
 
-  <h3>📊 Historial</h3>
-  <div id="history"></div>
+<button onclick="startQuiz()">Iniciar</button>
+
+<h3>Historial</h3>
+<div id="history"></div>
+
 </div>
 
 <script src="preguntas.js"></script>
@@ -147,12 +120,21 @@ select{
 let quiz=[], current=0, score=0, answered=false;
 let timer, timeLeft, currentMode;
 let failedQuestions = JSON.parse(localStorage.getItem("failed")) || [];
+let stats = {};
 
-const correctSound = new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3");
-const wrongSound = new Audio("https://www.soundjay.com/buttons/sounds/button-10.mp3");
+/* 🔊 SONIDOS (FIX REAL) */
+const correctSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3");
+const wrongSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3");
 
+function safePlay(sound){
+  sound.currentTime = 0;
+  sound.play().catch(()=>{});
+}
+
+/* UTIL */
 function shuffle(arr){ return arr.sort(()=>Math.random()-0.5); }
 
+/* START */
 function startQuiz(){
   const mode = document.getElementById("mode").value;
   const sub = document.getElementById("subtopic").value;
@@ -168,33 +150,48 @@ function startQuiz(){
     filtered = filtered.filter(q => failedQuestions.includes(q.q));
   }
 
-  if(filtered.length === 0){
-    alert("No hay preguntas disponibles");
+  if(filtered.length===0){
+    alert("No hay preguntas");
     return;
   }
 
   const unique = new Map();
-  filtered.forEach(q=>{ if(!unique.has(q.q)) unique.set(q.q,q); });
+  filtered.forEach(q=>{
+    if(!unique.has(q.q)) unique.set(q.q,q);
+  });
+
   quiz = shuffle(Array.from(unique.values())).slice(0,20);
 
-  current=0; score=0;
+  current=0;
+  score=0;
+  stats={};
 
-  document.getElementById("app").innerHTML = `
-    <h3 id="cert"></h3>
-    <p id="topic"></p>
-    <h2 id="question"></h2>
-    <div id="options"></div>
-    <p id="feedback"></p>
-    <p id="progress"></p>
-    <div class="progressBar"><div id="bar" class="progress"></div></div>
-    <button class="next" onclick="nextQuestion()">Siguiente</button>
+  document.getElementById("app").innerHTML=`
+  <div class="flex">
+    <div class="left">
+      <h3 id="cert"></h3>
+      <p id="topic"></p>
+      <h2 id="question"></h2>
+      <div id="options"></div>
+      <p id="progress"></p>
+      <div class="progressBar"><div id="bar" class="progress"></div></div>
+      <button class="next" onclick="nextQuestion()">Siguiente</button>
+    </div>
+
+    <div class="right">
+      <h3>🧠 Explicación</h3>
+      <p id="explanation">Responde para ver explicación...</p>
+    </div>
+  </div>
   `;
 
   loadQuestion();
 }
 
+/* LOAD */
 function loadQuestion(){
   const q = quiz[current];
+
   document.getElementById("cert").innerText = q.cert;
   document.getElementById("topic").innerText = "Subtema: "+q.topic;
   document.getElementById("question").innerText = q.q;
@@ -207,7 +204,7 @@ function loadQuestion(){
 
   const optDiv=document.getElementById("options");
   optDiv.innerHTML="";
-  document.getElementById("feedback").innerText="";
+  document.getElementById("explanation").innerText="Responde para ver explicación...";
   answered=false;
 
   q.o.forEach((opt,i)=>{
@@ -221,6 +218,7 @@ function loadQuestion(){
   startTimer();
 }
 
+/* TIMER */
 function startTimer(){
   clearInterval(timer);
 
@@ -228,7 +226,7 @@ function startTimer(){
 
   timeLeft = currentMode==="pro" ? 15 : 30;
 
-  timer = setInterval(()=>{
+  timer=setInterval(()=>{
     timeLeft--;
 
     document.getElementById("progress").innerText =
@@ -241,6 +239,7 @@ function startTimer(){
   },1000);
 }
 
+/* ANSWER */
 function selectAnswer(i){
   if(answered) return;
   answered=true;
@@ -255,39 +254,58 @@ function selectAnswer(i){
     if(index===i && i!==q.c)b.classList.add("wrong");
   });
 
+  if(!stats[q.topic]) stats[q.topic]={correct:0,wrong:0};
+
   if(i===q.c){
     score+=10;
-    correctSound.play();
-    document.getElementById("feedback").innerText="✅ +10 | "+q.tip;
+    stats[q.topic].correct++;
+    safePlay(correctSound);
+
+    document.getElementById("explanation").innerText =
+      "✅ Correcto\n\n" +
+      "✔ " + q.o[q.c] + "\n\n" +
+      "💡 " + q.tip;
+
   }else{
     score-=5;
-    wrongSound.play();
+    stats[q.topic].wrong++;
+    safePlay(wrongSound);
+
     failedQuestions.push(q.q);
     localStorage.setItem("failed",JSON.stringify(failedQuestions));
 
-    document.getElementById("feedback").innerText=
-      "❌ -5 | Correcta: "+q.o[q.c]+" | "+q.tip;
+    document.getElementById("explanation").innerText =
+      "❌ Incorrecto\n\n" +
+      "✔ Correcta: " + q.o[q.c] + "\n\n" +
+      "💡 " + q.tip;
   }
 }
 
+/* AUTO FAIL */
 function autoFail(){
   const q=quiz[current];
   const btns=document.querySelectorAll(".option");
 
-  btns.forEach((b,index)=>{
+  btns.forEach(b=>{
     b.disabled=true;
-    if(index===q.c)b.classList.add("correct");
+    b.classList.add("wrong");
   });
+
+  if(!stats[q.topic]) stats[q.topic]={correct:0,wrong:0};
+  stats[q.topic].wrong++;
+
+  score-=5;
 
   failedQuestions.push(q.q);
   localStorage.setItem("failed",JSON.stringify(failedQuestions));
 
-  document.getElementById("feedback").innerText=
-    "⏱️ Tiempo agotado | "+q.tip;
+  document.getElementById("explanation").innerText =
+    "⏱️ Tiempo agotado\n\n💡 " + q.tip;
 
   answered=true;
 }
 
+/* NEXT */
 function nextQuestion(){
   current++;
   if(current>=quiz.length){
@@ -298,24 +316,52 @@ function nextQuestion(){
   loadQuestion();
 }
 
+/* ANALISIS */
+function generateAnalysis(){
+  let txt="🧠 ANALISIS\n\n";
+
+  for(let t in stats){
+    let s=stats[t];
+    let total=s.correct+s.wrong;
+    let p=Math.round((s.correct/total)*100);
+
+    txt+=`${t}: ${p}%\n`;
+
+    if(p<50) txt+="⚠️ Estudiar fuerte\n\n";
+    else if(p<80) txt+="🟡 Repasar\n\n";
+    else txt+="🟢 Bien\n\n";
+  }
+
+  return txt;
+}
+
+/* RESULT */
 function showResult(){
+  const analysis=generateAnalysis();
+
   document.getElementById("app").innerHTML=`
     <h2>Resultado</h2>
     <p>Puntaje: ${score}</p>
+
+    <pre style="background:#0f172a;padding:15px;border-radius:10px;text-align:left">
+${analysis}
+    </pre>
+
     <button onclick="location.reload()">Reiniciar</button>
   `;
 }
 
+/* HISTORIAL */
 function saveHistory(){
-  let history = JSON.parse(localStorage.getItem("history")) || [];
-  history.push(score);
-  localStorage.setItem("history",JSON.stringify(history));
+  let h=JSON.parse(localStorage.getItem("history"))||[];
+  h.push(score);
+  localStorage.setItem("history",JSON.stringify(h));
 }
 
 function loadHistory(){
-  let history = JSON.parse(localStorage.getItem("history")) || [];
-  let div=document.getElementById("history");
-  div.innerHTML = history.map(h=>`<p>Score: ${h}</p>`).join("");
+  let h=JSON.parse(localStorage.getItem("history"))||[];
+  document.getElementById("history").innerHTML=
+    h.map(x=>`<p>${x}</p>`).join("");
 }
 
 loadHistory();
