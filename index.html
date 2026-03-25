@@ -1,53 +1,103 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
+<head> 
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Simulador Azure PRO</title>
 
 <style>
+*{
+  box-sizing:border-box;
+}
+
 body{
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   background:#0f172a;
   color:#fff;
   display:flex;
   justify-content:center;
   align-items:center;
-  height:100vh
+  min-height:100vh;
+  margin:0;
+  padding:10px;
 }
+
 .card{
   background:#1e293b;
   padding:20px;
   border-radius:12px;
-  width:750px
+  width:100%;
+  max-width:750px;
 }
+
+h2,h3{
+  margin-top:10px;
+}
+
 button{
   margin-top:10px;
-  padding:10px;
+  padding:15px;
   border:none;
   border-radius:8px;
-  cursor:pointer
+  cursor:pointer;
+  font-size:16px;
+  width:100%;
 }
+
 .option{
   display:block;
   width:100%;
   margin:5px 0;
   background:#334155;
-  color:#fff
+  color:#fff;
 }
+
 .correct{background:#16a34a!important}
 .wrong{background:#dc2626!important}
 .next{background:#2563eb;color:white}
-select,label{margin-top:10px;display:block}
+
+select,label{
+  margin-top:10px;
+  display:block;
+  width:100%;
+}
+
+select{
+  padding:10px;
+  border-radius:6px;
+}
+
 .progressBar{
   height:10px;
   background:#334155;
   border-radius:5px;
   margin-top:10px;
 }
+
 .progress{
   height:10px;
   background:#22c55e;
   border-radius:5px;
+}
+
+/* 📱 Ajustes móviles */
+@media (max-width:600px){
+  .card{
+    padding:15px;
+  }
+
+  h2{
+    font-size:20px;
+  }
+
+  h3{
+    font-size:16px;
+  }
+
+  button{
+    font-size:15px;
+    padding:14px;
+  }
 }
 </style>
 </head>
